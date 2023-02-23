@@ -155,9 +155,9 @@ void loop() {
       if (AuxBotao2 == LOW) {
         AuxBotao2 = HIGH;
         Botao2 = ! Botao2;
-        Serial.print("       Botao 2 Pressionado: ");
+        Serial.print("    Botao 2 Pressionado: ");
         Serial.println(Botao2);
-        digitalWrite(MILELIGHT, LOW);       
+        digitalWrite(MILELIGHT_PIN, LOW);       
       }
     } else {
       AuxBotao2 = LOW;
@@ -165,7 +165,7 @@ void loop() {
 
     if (Botao2 == HIGH) {
       //tone(SPEAKERPIN, 10, 200);
-      digitalWrite(MILELIGHT, HIGH);       
+      digitalWrite(MILELIGHT_PIN, HIGH);       
     }
 
     //BOTÃO 3 - Farol baixo, alto e lanternas
@@ -173,10 +173,10 @@ void loop() {
       if (AuxBotao3 == LOW) {
         AuxBotao3 = HIGH;
         Botao3 = ! Botao3;
-        Serial.print("       Botao 3 Pressionado: ");
+        Serial.print("    Botao 3 Pressionado: ");
         Serial.println(Botao3);
-        digitalWrite(HEADLIGHT, LOW);       
-        digitalWrite(REARLIGHT, LOW);       
+        digitalWrite(HEADLIGHT_PIN, LOW);       
+       // digitalWrite(REARLIGHT_PIN, LOW);       
       }
     } else {
       AuxBotao3 = LOW;
@@ -184,23 +184,23 @@ void loop() {
 
     if (Botao3 == HIGH) {
       //tone(SPEAKERPIN, 10, 200);
-      digitalWrite(HEADLIGHT, HIGH);       
-      digitalWrite(REARLIGHT, HIGH);      
+      digitalWrite(HEADLIGHT_PIN, HIGH);       
+     // digitalWrite(REARLIGHT_PIN, HIGH);      
     }
  // Fim Botoes
  
  // Inicio dos controles PWM
  
  // PWM da Direção
-    int st_posicao = map(Controle.Joystick_BX, 0, 255, 0, 180); 
+    int st_posicao = map(Controle.Joystick_BX, 20, 120, 0, 180); 
     SERVO_STEERING.write(st_posicao);
-
+    if (st_posicao < 90 or st_posicao > 96){
     Serial.print("Direcao_controle:     "); 
     Serial.println(Controle.Joystick_BX); 
 
     Serial.print("Direcao_servo:     "); 
     Serial.println(st_posicao); 
-
+    }
  // Fim PWM Direção
 
     cont = 0;
@@ -223,44 +223,44 @@ void loop() {
 
 void Sirene() {
   int frequencia = 0;
-  digitalWrite(RIGHTSIGNAL, HIGH);
-  digitalWrite(LEFTSIGNAL, HIGH);
+  digitalWrite(RIGHTSIGNAL_PIN, HIGH);
+  digitalWrite(LEFTSIGNAL_PIN, HIGH);
   
   for (frequencia = 80; frequencia < 2200; frequencia += 1) {
   tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
-  digitalWrite(RIGHTSIGNAL, LOW);
-  digitalWrite(LEFTSIGNAL, LOW);
+  digitalWrite(RIGHTSIGNAL_PIN, LOW);
+  digitalWrite(LEFTSIGNAL_PIN, LOW);
   
   for (frequencia = 2200 ; frequencia > 200; frequencia -= 1) {
   tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
-  digitalWrite(RIGHTSIGNAL, HIGH);
-  digitalWrite(LEFTSIGNAL, HIGH);
+  digitalWrite(RIGHTSIGNAL_PIN, HIGH);
+  digitalWrite(LEFTSIGNAL_PIN, HIGH);
 }
 
 
 
 void SireneRapida() {
   int frequencia = 0;
-  digitalWrite(RIGHTSIGNAL, HIGH);
-  digitalWrite(LEFTSIGNAL, HIGH);
+  digitalWrite(RIGHTSIGNAL_PIN, HIGH);
+  digitalWrite(LEFTSIGNAL_PIN, HIGH);
 
   for (frequencia = 150; frequencia < 1800; frequencia += 40) {
   tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
-  digitalWrite(RIGHTSIGNAL, LOW);
-  digitalWrite(LEFTSIGNAL, LOW);
+  digitalWrite(RIGHTSIGNAL_PIN, LOW);
+  digitalWrite(LEFTSIGNAL_PIN, LOW);
 
   for (frequencia = 1800 ; frequencia > 150; frequencia -= 40) {
   tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
-  digitalWrite(RIGHTSIGNAL, HIGH);
-  digitalWrite(LEFTSIGNAL, HIGH);
+  digitalWrite(RIGHTSIGNAL_PIN, HIGH);
+  digitalWrite(LEFTSIGNAL_PIN, HIGH);
 }
 
 void beep()
