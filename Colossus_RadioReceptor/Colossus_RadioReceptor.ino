@@ -7,9 +7,26 @@
 #include <RF24.h>
 #include <Servo.h>
 
+// Definição dos pinos 
+#define SPEAKER_PIN A4
+#define ESC_PIN 5
+#define GEAR_PIN 6
+#define QUATTRO_PIN 9
+#define STEERING_PIN 3
+#define HEADLIGHT_PIN 7
+#define REARLIGHT_PIN A5
+#define MILELIGHT_PIN A2
+#define BREAKLIGHT_PIN A3
+#define RIGHTSIGNAL_PIN 2
+#define LEFTSIGNAL_PIN 4
+
 uint32_t PiscaAlerta, SetaDireita, SetaEsquerda, amostra_tempo; 
 
 Servo myservo;
+Servo SERVO_STEERING;
+Servo SERVO_QUATTRO;
+Servo SERVO_GEAR;
+Servo SERVO_ESC;
 
 RF24 radio(8, 10);  
 
@@ -39,19 +56,7 @@ void setup() {
 
   Serial.begin(115200);
   delay(100);   
-  Serial.println("*** Colossus Estrela - NRF24L01+ ***"); 
-
-  // Definição dos pinos 
-  #define SPEAKERPIN A4
-  #define GEAR 6
-  #define QUATTRO 9
-  #define STEERING 3
-  #define HEADLIGHT 7
-  #define REARLIGHT A5
-  #define MILELIGHT A2
-  #define BREAKLIGHT A3
-  #define RIGHTSIGNAL 2
-  #define LEFTSIGNAL 4
+  Serial.println(" Colossus Estrela - NRF24L01+ "); 
     
   pinMode(2, OUTPUT);     // SETA DIREITA
   pinMode(3, OUTPUT);     // PWM 1
@@ -70,7 +75,8 @@ void setup() {
   //Canal do receptor
   int CHANNEL = 100;
   
-  myservo.attach(3);
+  // Config PWM
+  SERVO_STEERING.attach(STEERING_PIN);
   
   radio.begin();                            
   radio.setAutoAck(false);                 
@@ -90,46 +96,43 @@ void loop() {
   if (radio.available()) { 
     radio.read( &Controle, sizeof(Controle) );  
 
-    //BOTÃO 0
+    //BOTÃO 0 - Sirene
     if (Controle.Botao_0 == LOW) { 
       if (AuxBotao0 == LOW) {     
-        AuxBotao0 = HIGH;         
-        Botao0 = ! Botao0;       
-        Serial.print("   Botao 0 Pressionado: ");
-        Serial.println(Botao0);     
-        digitalWrite(2, LOW);  
-        digitalWrite(4, LOW);  
-      }
-    } else { 
+          AuxBotao0 = HIGH;         
+          Botao0 = ! Botao0;       
+          Serial.print("   Botao 0 Pressionado: ");
+          Serial.println(Botao0);     
+          digitalWrite(RIGHTSIGNAL_PIN, LOW);  
+          digitalWrite(LEFTSIGNAL_PIN, LOW);  
+       }
+    }
+    else { 
       AuxBotao0 = LOW; 
     }
-
     if (Botao0 == HIGH) { 
       Botao1 = LOW;  
       Botao2 = LOW; 
       if (millis() -  PiscaAlerta > 500) {  
-        digitalWrite(2, !digitalRead(2));
-        digitalWrite(4, !digitalRead(4)); 
-        tone(SPEAKERPIN, 100, 50);
+        digitalWrite(RIGHTSIGNAL_PIN, !digitalRead(RIGHTSIGNAL_PIN));
+        digitalWrite(LEFTSIGNAL_PIN, !digitalRead(LEFTSIGNAL_PIN)); 
+        tone(SPEAKER_PIN, 100, 50);
         //PiscaAlerta = millis();
         //Sirene(); 
         SireneRapida();
-
       }
     }
 
 
-    // TRATANDO DADOS RECEBIDOS DO BOTÃO 1
-    // USADO PARA SETA PARA DIREITA
-
+    //BOTÃO 1 - Seta para direita 
     if (Controle.Botao_1 == LOW) {
       if (AuxBotao1 == LOW) {
         AuxBotao1 = HIGH;
         Botao1 = ! Botao1;
         Serial.print("   Botao 1 Pressionado: ");
         Serial.println(Botao1);
-        digitalWrite(2, LOW);  
-        digitalWrite(4, LOW);  
+        digitalWrite(RIGHTSIGNAL_PIN, LOW);  
+        digitalWrite(LEFTSIGNAL_PIN, LOW);  
       }
     } else {
       AuxBotao1 = LOW;
@@ -139,16 +142,15 @@ void loop() {
       Botao2 = LOW;   
       
       if (millis() -  SetaDireita > 500) {
-        digitalWrite(2, !digitalRead(2));
-      tone(SPEAKERPIN, 80, 50);
+        digitalWrite(RIGHTSIGNAL_PIN, !digitalRead(RIGHTSIGNAL_PIN));
+        tone(SPEAKER_PIN, 80, 50);
         SetaDireita = millis();
       }
-      
       //Sirene(); 
     }
 
 
-    //BOTÃO 2
+    //BOTÃO 2 - Farol de Milha
     if (Controle.Botao_2 == LOW) {
       if (AuxBotao2 == LOW) {
         AuxBotao2 = HIGH;
@@ -166,7 +168,7 @@ void loop() {
       digitalWrite(MILELIGHT, HIGH);       
     }
 
-    //BOTÃO 3 - Farol
+    //BOTÃO 3 - Farol baixo, alto e lanternas
     if (Controle.Botao_3 == LOW) {
       if (AuxBotao3 == LOW) {
         AuxBotao3 = HIGH;
@@ -187,51 +189,19 @@ void loop() {
     }
  // Fim Botoes
  
-    int aux = 0; 
+ // Inicio dos controles PWM
+ 
+ // PWM da Direção
+    int st_posicao = map(Controle.Joystick_BX, 0, 255, 0, 180); 
+    SERVO_STEERING.write(st_posicao);
 
-    // CONTROLE DE DIREÇÃO - controla a posição Do braço do servo motor de acordo com os movimentos no joystick no controle remoto
-    aux = map(Controle.Joystick_BX, 0, 255, 40, 140); 
-    myservo.write(aux); 
+    Serial.print("Direcao_controle:     "); 
+    Serial.println(Controle.Joystick_BX); 
 
-    Serial.print("Direcao:     "); 
-    Serial.println(aux); 
+    Serial.print("Direcao_servo:     "); 
+    Serial.println(st_posicao); 
 
-
-    // Tratando valores recebidos dos joysticks para controle de frente ré e aceleração do motor
-    // Os valores recebidos do joystick vão de 0 a 255, os ifs abaixo dividem este valor para controlar frente ré e parado.
-
-    if (Controle.Joystick_AY >= 130) {
-      aux = map(Controle.Joystick_BX, 130, 255, 20, 255); 
-//      analogWrite(5, aux);  
-//      analogWrite(6, LOW);     
-
-     // Serial.print("Frente: "); 
-     // Serial.println(aux);  
-
-//      digitalWrite(3, digitalRead(2));   
-
-    }
-    else if (Controle.Joystick_AY <= 125) { 
-      aux = map(Controle.Joystick_AY, 125, 0, 20, 255);
- //     analogWrite(5, LOW);  
- //     analogWrite(6, aux);  
-
-      //Serial.print("Re:     "); 
-      //Serial.println(aux);  
-
- //     digitalWrite(3, HIGH);              
-
-    }
-    else {
-     
- //     analogWrite(5, LOW);   
- //     analogWrite(6, LOW);   
-
-      //Serial.println("PARADO "); 
-
-//      digitalWrite(3, digitalRead(2)); 
-
-    }
+ // Fim PWM Direção
 
     cont = 0;
   }
@@ -240,13 +210,10 @@ void loop() {
     if (cont > 10) { 
       cont = 11;
       Serial.println("Sem Sinal do Radio: Verifique se o transmissor esta ligado");  
- //     digitalWrite(5, LOW);  
- //     digitalWrite(6, LOW);  
-
       if (millis() - amostra_tempo > 5000) {
-      tone(SPEAKERPIN, 700, 100);
+      tone(SPEAKER_PIN, 700, 100);
         delay(100);
-      tone(SPEAKERPIN, 1300, 100);
+      tone(SPEAKER_PIN, 1300, 100);
         amostra_tempo = millis();
       }
     }
@@ -260,14 +227,14 @@ void Sirene() {
   digitalWrite(LEFTSIGNAL, HIGH);
   
   for (frequencia = 80; frequencia < 2200; frequencia += 1) {
-  tone(SPEAKERPIN, frequencia, 10);
+  tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
   digitalWrite(RIGHTSIGNAL, LOW);
   digitalWrite(LEFTSIGNAL, LOW);
   
   for (frequencia = 2200 ; frequencia > 200; frequencia -= 1) {
-  tone(SPEAKERPIN, frequencia, 10);
+  tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
   digitalWrite(RIGHTSIGNAL, HIGH);
@@ -282,14 +249,14 @@ void SireneRapida() {
   digitalWrite(LEFTSIGNAL, HIGH);
 
   for (frequencia = 150; frequencia < 1800; frequencia += 40) {
-  tone(SPEAKERPIN, frequencia, 10);
+  tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
   digitalWrite(RIGHTSIGNAL, LOW);
   digitalWrite(LEFTSIGNAL, LOW);
 
   for (frequencia = 1800 ; frequencia > 150; frequencia -= 40) {
-  tone(SPEAKERPIN, frequencia, 10);
+  tone(SPEAKER_PIN, frequencia, 10);
     delay(1);
   }
   digitalWrite(RIGHTSIGNAL, HIGH);
@@ -301,15 +268,15 @@ void beep()
       int k = random(1000,2000);
     for (int i = 0; i <=  random(100,2000); i++){
         
-        tone(SPEAKERPIN, k+(-i*2));          
+        tone(SPEAKER_PIN, k+(-i*2));          
         delay(random(.9,2));             
     } 
     for (int i = 0; i <= random(100,1000); i++){
         
-        tone(SPEAKERPIN, k + (i * 10));          
+        tone(SPEAKER_PIN, k + (i * 10));          
         delay(random(.9,2));             
     }
-    tone (SPEAKERPIN,300,100); 
+    tone (SPEAKER_PIN,300,100); 
 }
 
 //END

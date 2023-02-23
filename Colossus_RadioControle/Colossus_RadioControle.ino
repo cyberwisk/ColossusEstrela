@@ -124,7 +124,7 @@ void readVcc()
   
   if (result < 3100) { // Aciona o buzzer se a tensão da bateria estiver menor que 3,1 volts
     digitalWrite(LED_GREEM, LOW);
-    tone(SPEAKERPIN, 900, 100);
+    tone(SPEAKER_PIN, 900, 100);
     digitalWrite(LED_RED, HIGH);    
   }
   digitalWrite(LED_RED, LOW);      
@@ -135,17 +135,17 @@ void beep()
       int k = random(1000,2000);
     for (int i = 0; i <=  random(100,2000); i++){
         digitalWrite(LED_GREEM, LOW);
-        tone(SPEAKERPIN, k+(-i*2));          
+        tone(SPEAKER_PIN, k+(-i*2));          
         delay(random(.9,2));
         digitalWrite(LED_RED, HIGH);             
     } 
     for (int i = 0; i <= random(100,1000); i++){
         digitalWrite(LED_GREEM, HIGH);
-        tone(SPEAKERPIN, k + (i * 10));          
+        tone(SPEAKER_PIN, k + (i * 10));          
         delay(random(.9,2));
         digitalWrite(LED_RED, LOW);             
     }
-    tone (SPEAKERPIN,300,100);
+    tone (SPEAKER_PIN,300,100);
     digitalWrite(LED_RED, HIGH); 
 }
 
