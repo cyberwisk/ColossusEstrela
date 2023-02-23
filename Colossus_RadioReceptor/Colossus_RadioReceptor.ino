@@ -81,17 +81,7 @@ void setup() {
   radio.openReadingPipe(1, 0xE8E8F0F0E1LL); 
   radio.startListening();                  
 
-  // Emite um bip ao ligar o receptor
-  tone(SPEAKERPIN, 1000, 100);
-  delay(100);
-  tone(SPEAKERPIN, 800, 100);
-  delay(100);
-  tone(SPEAKERPIN, 600, 100);
-  delay(100);
-  tone(SPEAKERPIN, 400, 100);
-  delay(100);
-  tone(SPEAKERPIN, 200, 100);
-  delay(100);
+beep();
 }
 
 void loop() {
@@ -304,6 +294,22 @@ void SireneRapida() {
   }
   digitalWrite(RIGHTSIGNAL, HIGH);
   digitalWrite(LEFTSIGNAL, HIGH);
+}
+
+void beep()
+{
+      int k = random(1000,2000);
+    for (int i = 0; i <=  random(100,2000); i++){
+        
+        tone(SPEAKERPIN, k+(-i*2));          
+        delay(random(.9,2));             
+    } 
+    for (int i = 0; i <= random(100,1000); i++){
+        
+        tone(SPEAKERPIN, k + (i * 10));          
+        delay(random(.9,2));             
+    }
+    tone (SPEAKERPIN,300,100); 
 }
 
 //END
